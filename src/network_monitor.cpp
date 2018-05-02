@@ -91,7 +91,9 @@ NetworkMonitor::~NetworkMonitor()
 
 void* NetworkMonitor::run(void* arg)
 {
+    //pthread_detach(pthread_self());
     NetworkMonitor* This = (NetworkMonitor*) arg;
+
     std::cout << "run" << std::endl;
 
     int i = 0;

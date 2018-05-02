@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     monitor = new NetworkMonitor();
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
         std::cout << i << std::endl;
         sleep(1);
@@ -17,6 +17,6 @@ int main(int argc, char** argv)
             std::cout << "classid: "<< it.first << " bytes: " << it.second << std::endl;
     }
 
-    delete monitor;
-
+    //delete monitor;
+    return 0;
 }
