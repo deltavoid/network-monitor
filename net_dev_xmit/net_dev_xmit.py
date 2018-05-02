@@ -31,7 +31,7 @@ bpf_text = """
 
 
 struct info_t {
-    u32 pid;
+    //u32 pid;
     u32 classid;
 
     char name0;
@@ -39,10 +39,10 @@ struct info_t {
     char name2;
     char name3;
 
-    u32 saddr;
-    u32 daddr;
-    u16 lport;
-    u16 dport;
+    //u32 saddr;
+    //u32 daddr;
+    //u16 lport;
+    //u16 dport;
 };
 
 BPF_HASH(info_set, struct info_t);
@@ -73,7 +73,7 @@ TRACEPOINT_PROBE(net, net_dev_xmit) {
     bpf_probe_read((void*)&skcd_classid, sizeof(skcd_classid), (void*)&skcd->classid);
     classid = (skcd_is_data & 1) ? skcd_classid : 0;
 
-    info.pid = pid;
+    //info.pid = pid;
     info.classid = classid;
 
 
@@ -82,7 +82,7 @@ TRACEPOINT_PROBE(net, net_dev_xmit) {
     info.name2 = name[2];
     info.name3 = name[3];
 
-    bpf_probe_read((void*)&family, sizeof(family), (void*)&sk->__sk_common.skc_family);
+    /*bpf_probe_read((void*)&family, sizeof(family), (void*)&sk->__sk_common.skc_family);
     if (family == AF_INET) {
         bpf_probe_read((void*)&info.saddr, sizeof(info.saddr), (void*)&sk->__sk_common.skc_rcv_saddr);
         bpf_probe_read((void*)&info.daddr, sizeof(info.daddr), (void*)&sk->__sk_common.skc_daddr);
@@ -90,7 +90,7 @@ TRACEPOINT_PROBE(net, net_dev_xmit) {
         bpf_probe_read((void*)&info.dport, sizeof(info.dport), (void*)&sk->__sk_common.skc_dport);
         info.dport = ntohs(info.dport);
     
-    }
+    }*/
 
     val = info_set.lookup_or_init(&info, &zero);
     (*val) += len;
@@ -125,11 +125,7 @@ while True:
         #print(k.dport)
         #print(v.value)
         #print()
-        print("%c%c%c%c  %-21s %-21s %-6d %-12.12s %-6x %12s" % (k.name0, k.name1, k.name2, k.name3,
-            inet_ntop(AF_INET, pack("I", k.saddr)) + ":" + str(k.lport),
-            inet_ntop(AF_INET, pack("I", k.daddr)) + ":" + str(k.dport),
-            k.pid, 
-            pid_to_comm(k.pid),
+        print("%c%c%c%c  %-6x %12s" % (k.name0, k.name1, k.name2, k.name3,
             k.classid,
             v.value))
     
