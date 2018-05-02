@@ -27,7 +27,6 @@ BPF_HASH(info_set, struct info_t);
 
 int on_net_dev_xmit(struct net_dev_xmit_args* args)
 {
-
     struct sk_buff* skb = NULL;
     struct net_device* dev = NULL;
     struct sock* sk = NULL;
@@ -48,8 +47,6 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
     bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
     bpf_probe_read((void*)info.name, sizeof(info.name), (void*)dev->name);
 
-    //info.name0 = *((u64*)&name[0]);
-    //info.name1 = *((u64*)&name[1]);
     
     skcd = &sk->sk_cgrp_data;
     bpf_probe_read((void*)&skcd_is_data, sizeof(skcd_is_data), (void*)&skcd->is_data);
@@ -75,7 +72,7 @@ NetworkMonitor::NetworkMonitor()
     }
 
     auto attach_res = bpf.attach_tracepoint("net:net_dev_xmit", "on_net_dev_xmit");
-  if (attach_res.code() != 0)
+    if (attach_res.code() != 0)
     {
         std::cerr << attach_res.msg() << std::endl;
         return;
@@ -101,20 +98,20 @@ void* NetworkMonitor::run(void* arg)
     while (true)
     {
         sleep(1);
-        std::cout << "id:       " << ++i << std::endl;
+        //std::cout << "id:       " << ++i << std::endl;
         This->class_dev_bytes = This->bpf.get_hash_table<info_t, u64>("info_set").get_table_offline();
         This->bpf.get_hash_table<info_t, u64>("info_set").clear_table_non_atomic();
 
         
         This->class_bytes.clear();
         for (auto it : This->class_dev_bytes)
-        {   std::cout << " classid: " << it.first.classid 
+        {   /*std::cout << " classid: " << it.first.classid 
                       << " name:    " << it.first.name
                       << " len:     " << it.second
-                      << std::endl;
-            /*if  (std::string(it.first.name) == This->device)
+                      << std::endl;*/
+            if  (std::string(it.first.name) == This->device)
             {   This->class_bytes[it.first.classid] += it.second;
-            }*/
+            }
         }
     }
 

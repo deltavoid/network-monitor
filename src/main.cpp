@@ -11,10 +11,10 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < 100; i++)
     {
-        //std::cout << i << std::endl;
+        std::cout << i << std::endl;
         sleep(1);
-        //for (auto it : monitor->class_bytes)
-          //  std::cout << "classid: "<< it.first << " bytes: " << it.second << std::endl;
+        for (auto it : monitor->class_bytes)
+            std::cout << "classid: "<< it.first << " bytes: " << it.second << std::endl;
     }
 
     delete monitor;
