@@ -20,8 +20,7 @@ struct net_dev_xmit_args
 
 struct info_t {
     u32 classid;
-    u64 name0;
-    u64 name1;
+    char name[16];
 };
 
 BPF_HASH(info_set, struct info_t);
@@ -47,10 +46,10 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
     bpf_probe_read((void*)&len, sizeof(len), (void*)&skb->len);
     bpf_probe_read((void*)&dev, sizeof(dev), (void*)&skb->dev);
     bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
-    //bpf_probe_read((void*)name, sizeof(name), (void*)dev->name);
+    bpf_probe_read((void*)info.name, sizeof(info.name), (void*)dev->name);
 
-    info.name0 = *((u64*)&name[0]);
-    info.name1 = *((u64*)&name[1]);
+    //info.name0 = *((u64*)&name[0]);
+    //info.name1 = *((u64*)&name[1]);
     
     skcd = &sk->sk_cgrp_data;
     bpf_probe_read((void*)&skcd_is_data, sizeof(skcd_is_data), (void*)&skcd->is_data);
@@ -110,7 +109,7 @@ void* NetworkMonitor::run(void* arg)
         This->class_bytes.clear();
         for (auto it : This->class_dev_bytes)
         {   std::cout << " classid: " << it.first.classid 
-                      << " name:    " << it.first.name0
+                      << " name:    " << it.first.name
                       << " len:     " << it.second
                       << std::endl;
             /*if  (std::string(it.first.name) == This->device)
