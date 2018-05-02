@@ -10,16 +10,24 @@ const std::string NetworkMonitor::BPF_PROGRAM = R"(
 #include <bcc/proto.h>
 
 
+struct net_dev_xmit_args
+{   uint64_t common__unused;
+    void* skbaddr;
+    unsigned int len;
+    int rc;
+    int name;
+};
+
 struct info_t {
     u32 classid;
-    //char name[16];
     u64 name0;
     u64 name1;
 };
 
 BPF_HASH(info_set, struct info_t);
 
-TRACEPOINT_PROBE(net, net_dev_xmit) {
+int on_net_dev_xmit(struct net_dev_xmit_args* args)
+{
 
     struct sk_buff* skb = NULL;
     struct net_device* dev = NULL;
@@ -39,7 +47,7 @@ TRACEPOINT_PROBE(net, net_dev_xmit) {
     bpf_probe_read((void*)&len, sizeof(len), (void*)&skb->len);
     bpf_probe_read((void*)&dev, sizeof(dev), (void*)&skb->dev);
     bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
-    bpf_probe_read((void*)name, sizeof(name), (void*)dev->name);
+    //bpf_probe_read((void*)name, sizeof(name), (void*)dev->name);
 
     info.name0 = *((u64*)&name[0]);
     info.name1 = *((u64*)&name[1]);
@@ -67,8 +75,8 @@ NetworkMonitor::NetworkMonitor()
         return;
     }
 
-    auto attach_res = bpf.attach_kprobe("tcp_sendmsg", "kprobe__tcp_sendmsg");
-    if (attach_res.code() != 0)
+    auto attach_res = bpf.attach_tracepoint("net:net_dev_xmit", "on_net_dev_xmit");
+  if (attach_res.code() != 0)
     {
         std::cerr << attach_res.msg() << std::endl;
         return;
