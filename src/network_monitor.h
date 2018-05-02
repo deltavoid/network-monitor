@@ -13,7 +13,8 @@ typedef unsigned long long u64;
 
 struct info_t
 {   u32 classid;
-    char name[16];
+    u64 name0;
+    u64 name1;
 };
 
 class NetworkMonitor

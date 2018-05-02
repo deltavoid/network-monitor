@@ -1,4 +1,5 @@
 #include "network_monitor.h"
+#include <cstdlib>
 #include <iostream>
 
 const std::string NetworkMonitor::BPF_PROGRAM = R"(
@@ -12,6 +13,8 @@ const std::string NetworkMonitor::BPF_PROGRAM = R"(
 struct info_t {
     u32 classid;
     //char name[16];
+    u64 name0;
+    u64 name1;
 };
 
 BPF_HASH(info_set, struct info_t);
@@ -36,19 +39,16 @@ TRACEPOINT_PROBE(net, net_dev_xmit) {
     bpf_probe_read((void*)&len, sizeof(len), (void*)&skb->len);
     bpf_probe_read((void*)&dev, sizeof(dev), (void*)&skb->dev);
     bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
-    bpf_probe_read((void*)info.name, sizeof(info.name), (void*)dev->name);
+    bpf_probe_read((void*)name, sizeof(name), (void*)dev->name);
+
+    info.name0 = *((u64*)&name[0]);
+    info.name1 = *((u64*)&name[1]);
     
     skcd = &sk->sk_cgrp_data;
     bpf_probe_read((void*)&skcd_is_data, sizeof(skcd_is_data), (void*)&skcd->is_data);
     bpf_probe_read((void*)&skcd_classid, sizeof(skcd_classid), (void*)&skcd->classid);
     classid = (skcd_is_data & 1) ? skcd_classid : 0;
-
     info.classid = classid;
-
-    /*info.name0 = name[0];
-    info.name1 = name[1];
-    info.name2 = name[2];
-    info.name3 = name[3];*/
 
     val = info_set.lookup_or_init(&info, &zero);
     (*val) += len;
@@ -67,6 +67,13 @@ NetworkMonitor::NetworkMonitor()
         return;
     }
 
+    auto attach_res = bpf.attach_kprobe("tcp_sendmsg", "kprobe__tcp_sendmsg");
+    if (attach_res.code() != 0)
+    {
+        std::cerr << attach_res.msg() << std::endl;
+        return;
+    }
+
     device = "eno1";
 
     int thread_res = pthread_create(&run_thread, NULL, run, (void*)this);
@@ -81,22 +88,26 @@ NetworkMonitor::~NetworkMonitor()
 void* NetworkMonitor::run(void* arg)
 {
     NetworkMonitor* This = (NetworkMonitor*) arg;
+    std::cout << "run" << std::endl;
 
+    int i = 0;
     while (true)
     {
         sleep(1);
+        std::cout << "id:       " << ++i << std::endl;
         This->class_dev_bytes = This->bpf.get_hash_table<info_t, u64>("info_set").get_table_offline();
         This->bpf.get_hash_table<info_t, u64>("info_set").clear_table_non_atomic();
 
+        
         This->class_bytes.clear();
         for (auto it : This->class_dev_bytes)
         {   std::cout << " classid: " << it.first.classid 
-                      << " name:    " << it.first.name
+                      << " name:    " << it.first.name0
                       << " len:     " << it.second
                       << std::endl;
-            if  (std::string(it.first.name) == This->device)
+            /*if  (std::string(it.first.name) == This->device)
             {   This->class_bytes[it.first.classid] += it.second;
-            }
+            }*/
         }
     }
 
