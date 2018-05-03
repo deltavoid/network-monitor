@@ -64,14 +64,16 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
 
 NetworkMonitor::NetworkMonitor()
 {
-    auto init_res = bpf.init(BPF_PROGRAM);
+    bpf = new ebpf::BPF();
+
+    auto init_res = bpf->init(BPF_PROGRAM);
     if (init_res.code() != 0)
     {
         std::cerr << init_res.msg() << std::endl;
         return;
     }
 
-    auto attach_res = bpf.attach_tracepoint("net:net_dev_xmit", "on_net_dev_xmit");
+    auto attach_res = bpf->attach_tracepoint("net:net_dev_xmit", "on_net_dev_xmit");
     if (attach_res.code() != 0)
     {
         std::cerr << attach_res.msg() << std::endl;
@@ -86,12 +88,12 @@ NetworkMonitor::NetworkMonitor()
 
 NetworkMonitor::~NetworkMonitor()
 {
-
+    delete bpf;
 }
 
 void* NetworkMonitor::run(void* arg)
 {
-    //pthread_detach(pthread_self());
+    pthread_detach(pthread_self());
     NetworkMonitor* This = (NetworkMonitor*) arg;
 
     std::cout << "run" << std::endl;
@@ -101,8 +103,8 @@ void* NetworkMonitor::run(void* arg)
     {
         sleep(1);
         //std::cout << "id:       " << ++i << std::endl;
-        This->class_dev_bytes = This->bpf.get_hash_table<info_t, u64>("info_set").get_table_offline();
-        This->bpf.get_hash_table<info_t, u64>("info_set").clear_table_non_atomic();
+        This->class_dev_bytes = This->bpf->get_hash_table<info_t, u64>("info_set").get_table_offline();
+        This->bpf->get_hash_table<info_t, u64>("info_set").clear_table_non_atomic();
 
         
         This->class_bytes.clear();

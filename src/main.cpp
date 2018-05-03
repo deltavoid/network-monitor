@@ -17,6 +17,12 @@ int main(int argc, char** argv)
             std::cout << "classid: "<< it.first << " bytes: " << it.second << std::endl;
     }
 
-    //delete monitor;
+    std::cout << "over" << std::endl;
+
+
+    delete monitor;
+
+    std::cout << "deleted" << std::endl;
+    
     return 0;
 }

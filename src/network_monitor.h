@@ -23,7 +23,7 @@ class NetworkMonitor
 
     static void* run(void* arg);
 
-    ebpf::BPF bpf;
+    ebpf::BPF* bpf;
     static const std::string BPF_PROGRAM;
     std::string device;
     pthread_t run_thread;
