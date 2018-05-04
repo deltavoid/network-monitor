@@ -56,7 +56,7 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
 )";
 
 
-NetworkMonitor::NetworkMonitor()
+NetworkMonitor::NetworkMonitor(std::string _device)
 {
     bpf = new ebpf::BPF();
 
@@ -74,7 +74,7 @@ NetworkMonitor::NetworkMonitor()
         return;
     }
 
-    device = "eno1";
+    this->device = _device;
 
     int thread_res = pthread_create(&run_thread, NULL, run, (void*)this);
 
@@ -82,6 +82,7 @@ NetworkMonitor::NetworkMonitor()
 
 NetworkMonitor::~NetworkMonitor()
 {
+    pthread_cancel(run_thread);
     delete bpf;
 }
 
@@ -107,3 +108,7 @@ void* NetworkMonitor::run(void* arg)
 
 }
 
+u64 NetworkMonitor::get_class_bytes(u32 classid)
+{
+    return class_bytes[classid];
+}

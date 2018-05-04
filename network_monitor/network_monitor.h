@@ -18,10 +18,12 @@ struct info_t
 
 class NetworkMonitor
 {public:
-    NetworkMonitor();
+    NetworkMonitor(std::string _device);
     ~NetworkMonitor();
 
     static void* run(void* arg);
+
+    u64 get_class_bytes(u32 classid);
 
     ebpf::BPF* bpf;
     static const std::string BPF_PROGRAM;

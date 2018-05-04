@@ -7,7 +7,7 @@ NetworkMonitor* monitor;
 
 int main(int argc, char** argv)
 {
-    monitor = new NetworkMonitor();
+    monitor = new NetworkMonitor("eno1");
 
     for (int i = 0; i < 100; i++)
     {
