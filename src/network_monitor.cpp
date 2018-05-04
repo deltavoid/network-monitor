@@ -33,12 +33,8 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
     struct sock_cgroup_data* skcd = NULL;
     u8 skcd_is_data = 0;
     u32 skcd_classid = 0;
-    u32 classid = 0;
     struct info_t info = {};
     int len = 0;
-    char name[16] = {0};
-    u32 pid = bpf_get_current_pid_tgid();
-    u16 family = 0;
     u64 *val, zero = 0;
 
     skb = args->skbaddr;
@@ -47,12 +43,10 @@ int on_net_dev_xmit(struct net_dev_xmit_args* args)
     bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
     bpf_probe_read((void*)info.name, sizeof(info.name), (void*)dev->name);
 
-    
     skcd = &sk->sk_cgrp_data;
     bpf_probe_read((void*)&skcd_is_data, sizeof(skcd_is_data), (void*)&skcd->is_data);
     bpf_probe_read((void*)&skcd_classid, sizeof(skcd_classid), (void*)&skcd->classid);
-    classid = (skcd_is_data & 1) ? skcd_classid : 0;
-    info.classid = classid;
+    info.classid = (skcd_is_data & 1) ? skcd_classid : 0;
 
     val = info_set.lookup_or_init(&info, &zero);
     (*val) += len;
@@ -96,23 +90,15 @@ void* NetworkMonitor::run(void* arg)
     pthread_detach(pthread_self());
     NetworkMonitor* This = (NetworkMonitor*) arg;
 
-    std::cout << "run" << std::endl;
-
-    int i = 0;
     while (true)
     {
         sleep(1);
-        //std::cout << "id:       " << ++i << std::endl;
         This->class_dev_bytes = This->bpf->get_hash_table<info_t, u64>("info_set").get_table_offline();
         This->bpf->get_hash_table<info_t, u64>("info_set").clear_table_non_atomic();
 
-        
         This->class_bytes.clear();
         for (auto it : This->class_dev_bytes)
-        {   /*std::cout << " classid: " << it.first.classid 
-                      << " name:    " << it.first.name
-                      << " len:     " << it.second
-                      << std::endl;*/
+        {   
             if  (std::string(it.first.name) == This->device)
             {   This->class_bytes[it.first.classid] += it.second;
             }
