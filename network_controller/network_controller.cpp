@@ -1,10 +1,10 @@
 #include "network_controller.h"
-
+#include <iostream>
 
 
 NetworkController::NetworkController()
 {
-    default_delete = "eno1";
+    default_device = "eno1";
     default_bandwidth = 1e9 / 8; //bytes
     usable_bandwidth = default_bandwidth - default_bandwidth / 10;
 
@@ -25,11 +25,15 @@ NetworkController::~NetworkController()
 void NetworkController::set_LC_procs(int pid)
 {
     LC_pid = pid;
+    network_driver->set_LC_procs(pid);
+    std::cout << "NetworkController set_LC_procs " << LC_pid << std::endl;
 }
 
 void NetworkController::set_BE_procs(int pid)
 {
     BE_pid = pid;
+    network_driver->set_BE_procs(pid);
+    std::cout << "NetworkController set_BE_procs " << BE_pid << std::endl;
 }
 
 void* NetworkController::run(void* arg)
@@ -47,13 +51,14 @@ void* NetworkController::run(void* arg)
                   << " BE_bandwidth: " << BE_bandwidth
                   << std::endl;
 
+
         if  (LC_bandwidth < This->usable_bandwidth)
         {
             This->network_driver->set_BE_bandwidth(This->usable_bandwidth - LC_bandwidth);
         }
         else
         {
-            This->network_driver->set_BE_bandwidth(0);
+            This->network_driver->set_BE_bandwidth(1);
         }
 
     }

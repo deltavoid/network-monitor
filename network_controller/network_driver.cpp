@@ -96,5 +96,6 @@ void NetworkDriver::set_BE_bandwidth(u64 bw)
             string(" dev ") + device + 
             string(" parent 1: ") + 
             string(" classid 1:") + to_string(BE_classid % (1 << 16)) + 
-            string(" htb rate ") + to_string(bw)).c_str());
+            string(" htb rate ") + to_string(bw)
+            ).c_str());
 }

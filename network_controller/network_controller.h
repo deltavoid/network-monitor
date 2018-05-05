@@ -18,7 +18,7 @@ class NetworkController
     u64 usable_bandwidth;
     int LC_pid;
     int BE_pid;
-    thread_t run_thread;
+    pthread_t run_thread;
 
     NetworkController();
     ~NetworkController();

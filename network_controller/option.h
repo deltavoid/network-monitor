@@ -4,8 +4,8 @@
 
 class Option
 {public:
-    int lc_pid;
-    int be_pid;
+    int pid[10];
+    int pid_cnt;
 
     void parse(int argc, char** argv);
 };

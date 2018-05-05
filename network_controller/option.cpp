@@ -15,19 +15,15 @@ using namespace std;
 
 void Option::parse(int argc, char** argv)
 {
+    pid_cnt = 0;
+
     for (int i = 1; i < argc; i++)
     {
-        if  (strcmp(argv[i], "-lc_pid") == 0)
-        {
-            sscanf(argv[++i],"%d", &lc_pid);
-        }
-        else if  (strcmp(argv[i], "-be_pid") == 0)
-        {
-            sscanf(argv[++i], "%d", &be_pid);
-        }
+        sscanf(argv[i], "%d", &pid[pid_cnt++]);
+        std::cout << pid_cnt << std::endl;
     }
 
-    cout << " lc_pid: " << lc_pid
-         << " be_pid: " << be_pid << endl;
+    for (int i = 0; i < pid_cnt; i++)
+        std::cout << pid[i] << std::endl;
 
 }
