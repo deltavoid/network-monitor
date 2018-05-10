@@ -7,23 +7,32 @@
 #include "option.h"
 #include "network_controller.h"
 
-Option option;
+char oper[100];
 NetworkController* network_controller;
 
 
 int main(int argc, char** argv)
-{
-    std::cout << "start" << std::endl;
-    option.parse(argc, argv);
-    
+{    
     network_controller = new NetworkController();
-    network_controller->set_LC_procs(option.pid[0]);
-    network_controller->set_BE_procs(option.pid[1]);
 
-    for (int i = 0; i < 100; i++)
-        sleep(1);
+    while (scanf("%s", oper) != EOF)
+    {
+        int pid = 0;
+        if  (strcmp(oper, "lc") == 0)
+        {
+            scanf("%d", &pid);
+            network_controller->set_LC_procs(pid);
+        }
+        else if  (strcmp(oper, "be") == 0)
+        {
+            scanf("%d", &pid);
+            network_controller->set_BE_procs(pid);
+        }
+        else
+        {   break;
+        }
+    }
 
     delete network_controller;
-
     return 0;
 }
