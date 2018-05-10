@@ -1,25 +1,12 @@
 
 
-LLVM_PATH = /usr/lib/llvm-3.7
-
-BCC_PATH = /home/zqy/WorkSpace/LabeledKernel/Reference/linux/eBPF/bcc
-
-LLVM_INCLUDES = -I$(LLVM_PATH)/include/../tools/clang/include
-
-LLVM_LIB = $(LLVM_PATH)/lib/libclangFrontend.a $(LLVM_PATH)/lib/libclangSerialization.a $(LLVM_PATH)/lib/libclangDriver.a $(LLVM_PATH)/lib/libclangParse.a $(LLVM_PATH)/lib/libclangSema.a $(LLVM_PATH)/lib/libclangCodeGen.a $(LLVM_PATH)/lib/libclangAnalysis.a $(LLVM_PATH)/lib/libclangRewrite.a $(LLVM_PATH)/lib/libclangEdit.a $(LLVM_PATH)/lib/libclangAST.a $(LLVM_PATH)/lib/libclangLex.a $(LLVM_PATH)/lib/libclangBasic.a $(LLVM_PATH)/lib/libLLVMLTO.a $(LLVM_PATH)/lib/libLLVMX86CodeGen.a $(LLVM_PATH)/lib/libLLVMX86Desc.a $(LLVM_PATH)/lib/libLLVMX86Info.a $(LLVM_PATH)/lib/libLLVMMCDisassembler.a $(LLVM_PATH)/lib/libLLVMX86AsmPrinter.a $(LLVM_PATH)/lib/libLLVMX86Utils.a $(LLVM_PATH)/lib/libLLVMPasses.a $(LLVM_PATH)/lib/libLLVMipo.a $(LLVM_PATH)/lib/libLLVMVectorize.a $(LLVM_PATH)/lib/libLLVMOption.a $(LLVM_PATH)/lib/libLLVMObjCARCOpts.a $(LLVM_PATH)/lib/libLLVMMCJIT.a $(LLVM_PATH)/lib/libLLVMExecutionEngine.a $(LLVM_PATH)/lib/libLLVMRuntimeDyld.a $(LLVM_PATH)/lib/libLLVMLinker.a $(LLVM_PATH)/lib/libLLVMIRReader.a $(LLVM_PATH)/lib/libLLVMAsmParser.a $(LLVM_PATH)/lib/libLLVMDebugInfoDWARF.a $(LLVM_PATH)/lib/libLLVMBPFCodeGen.a $(LLVM_PATH)/lib/libLLVMSelectionDAG.a $(LLVM_PATH)/lib/libLLVMBPFDesc.a $(LLVM_PATH)/lib/libLLVMBPFInfo.a $(LLVM_PATH)/lib/libLLVMBPFAsmPrinter.a $(LLVM_PATH)/lib/libLLVMAsmPrinter.a $(LLVM_PATH)/lib/libLLVMCodeGen.a $(LLVM_PATH)/lib/libLLVMTarget.a $(LLVM_PATH)/lib/libLLVMScalarOpts.a $(LLVM_PATH)/lib/libLLVMProfileData.a $(LLVM_PATH)/lib/libLLVMObject.a $(LLVM_PATH)/lib/libLLVMMCParser.a $(LLVM_PATH)/lib/libLLVMBitReader.a $(LLVM_PATH)/lib/libLLVMInstCombine.a $(LLVM_PATH)/lib/libLLVMInstrumentation.a $(LLVM_PATH)/lib/libLLVMTransformUtils.a $(LLVM_PATH)/lib/libLLVMipa.a $(LLVM_PATH)/lib/libLLVMMC.a $(LLVM_PATH)/lib/libLLVMAnalysis.a $(LLVM_PATH)/lib/libLLVMBitWriter.a $(LLVM_PATH)/lib/libLLVMCore.a $(LLVM_PATH)/lib/libLLVMSupport.a
-
-BCC_INCLUDES =  -I$(BCC_PATH)/src/cc -I$(BCC_PATH)/src/cc/api 
-
-BCC_LIB = $(BCC_PATH)/src/cc/libbcc.a $(BCC_PATH)/src/cc/frontends/b/libb_frontend.a $(BCC_PATH)/src/cc/frontends/clang/libclang_frontend.a $(BCC_PATH)/src/cc/libbpf.a   $(BCC_PATH)/src/cc/api/libapi-static.a $(BCC_PATH)/src/cc/usdt/libusdt-static.a $(BCC_PATH)/src/cc/libbcc-loader-static.a
-
-
 CXX = g++
 
-CXXFLAGS = -g -Wall -isystem $(LLVM_PATH)/include -O2 -std=c++11 
+CXX_FLAGS = -g -Wall -O2 -std=c++11 
 
-CXX_INCLUDES = $(LLVM_INCLUDES) $(BCC_INCLUDES)
+CXX_INCLUDES = -I/usr/lib/llvm-3.7/include -I/usr/include/bcc 
 
-LDFLAGS = -rdynamic $(BCC_LIB)  $(LLVM_LIB) -lz -lpthread -lffi -ledit -ltinfo -ldl -lm -lelf
+CXX_LIBS = -lbcc -lbpf -lpthread
 
 
 
@@ -28,30 +15,29 @@ TARGET = main
 OBJECTS = main.o option.o network_controller.o network_driver.o network_monitor.o
 
 
-
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDFLAGS) -o main
+	$(CXX) $(CXX_FLAGS) -o main $(OBJECTS) $(CXX_LIBS) 
 	@echo [INFO] Compilation accomplished.
 
 main.o: main.cpp network_controller.h option.h
-	$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -o $@ -c $< 
+	$(CXX) $(CXX_FLAGS) $(CXX_INCLUDES) -o $@ -c $< 
 
 option.o: option.cpp option.h
-	$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -o $@ -c $< 
+	$(CXX) $(CXX_FLAGS) $(CXX_INCLUDES) -o $@ -c $< 
 
 network_controller.o: network_controller.cpp network_controller.h network_driver.h network_monitor.h
-	$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -o $@ -c $<
+	$(CXX) $(CXX_FLAGS) $(CXX_INCLUDES) -o $@ -c $<
 
 network_driver.o: network_driver.cpp network_driver.h
-	$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -o $@ -c $<
+	$(CXX) $(CXX_FLAGS) $(CXX_INCLUDES) -o $@ -c $<
 
 network_monitor.o: network_monitor.cpp network_monitor.h
-	$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -o $@ -c $<
+	$(CXX) $(CXX_FLAGS) $(CXX_INCLUDES) -o $@ -c $<
+
 
 .PHONY: clean
-
 clean:
 	@-rm *.o
 	@-rm main
