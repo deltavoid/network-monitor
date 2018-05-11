@@ -5,6 +5,7 @@
 typedef unsigned u32;
 typedef unsigned long long u64;
 
+
 class NetworkDriver
 {public:
     static const std::string cgroup_path;
@@ -18,6 +19,9 @@ class NetworkDriver
 
     NetworkDriver(std::string name, std::string _device, u64 rate);  //rate bytes
     ~NetworkDriver();
+
+    static bool init_dir(std::string path);
+    static bool write_to_file(std::string file_path, std::string content);
 
     void set_LC_procs(int pid);
     void set_LC_bandwidth(u64 bw);
