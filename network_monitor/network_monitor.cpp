@@ -4,10 +4,10 @@
 
 const std::string NetworkMonitor::BPF_PROGRAM = R"(
 #include <uapi/linux/ptrace.h>
+#include <bcc/proto.h>
 #include <linux/skbuff.h>
 #include <linux/netdevice.h>
 #include <net/cls_cgroup.h>
-#include <bcc/proto.h>
 
 
 struct net_dev_xmit_args
@@ -25,27 +25,26 @@ struct info_t {
 
 BPF_HASH(info_set, struct info_t);
 
+
 int on_net_dev_xmit(struct net_dev_xmit_args* args)
 {
     struct sk_buff* skb = NULL;
     struct net_device* dev = NULL;
     struct sock* sk = NULL;
-    struct sock_cgroup_data* skcd = NULL;
     u8 skcd_is_data = 0;
     u32 skcd_classid = 0;
-    struct info_t info = {};
     int len = 0;
+    struct info_t info = {};
     u64 *val, zero = 0;
 
     skb = args->skbaddr;
-    bpf_probe_read((void*)&len, sizeof(len), (void*)&skb->len);
-    bpf_probe_read((void*)&dev, sizeof(dev), (void*)&skb->dev);
-    bpf_probe_read((void*)&sk, sizeof(sk), (void*)&skb->sk);
-    bpf_probe_read((void*)info.name, sizeof(info.name), (void*)dev->name);
+    len = skb->len;
+    dev = skb->dev;
+    bpf_probe_read_str((void*)info.name, sizeof(info.name), (void*)dev->name);
 
-    skcd = &sk->sk_cgrp_data;
-    bpf_probe_read((void*)&skcd_is_data, sizeof(skcd_is_data), (void*)&skcd->is_data);
-    bpf_probe_read((void*)&skcd_classid, sizeof(skcd_classid), (void*)&skcd->classid);
+    sk = skb->sk;
+    skcd_is_data = sk->sk_cgrp_data.is_data;
+    skcd_classid = sk->sk_cgrp_data.classid;
     info.classid = (skcd_is_data & 1) ? skcd_classid : 0;
 
     val = info_set.lookup_or_init(&info, &zero);
@@ -105,7 +104,6 @@ void* NetworkMonitor::run(void* arg)
             }
         }
     }
-
 }
 
 u64 NetworkMonitor::get_class_bytes(u32 classid)
